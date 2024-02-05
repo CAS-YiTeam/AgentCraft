@@ -3,10 +3,3 @@
 
 #include "MatrixMsg.h"
 
-MatrixMsg::MatrixMsg()
-{
-}
-
-MatrixMsg::~MatrixMsg()
-{
-}
