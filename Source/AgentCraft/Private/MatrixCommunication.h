@@ -16,7 +16,7 @@ struct FMatrixMsgStruct
 
 	GENERATED_BODY()
 
-	// 必须使用小写字母 + 下划线！
+	// 蹇呴』浣跨敤灏忓啓瀛楁瘝 + 涓嬪垝绾匡紒
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString src;
 
@@ -58,6 +58,10 @@ struct FMatrixMsgStruct
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString reserved_field_08;
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool valid=false;
 };
 
 
@@ -65,28 +69,41 @@ UCLASS()
 class AMatrixCommunication : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AMatrixCommunication();
 	TSharedPtr<IWebSocket> WebSocket;
+
+	UPROPERTY(BlueprintReadOnly)
 	FString WebSocketCurrentUrl = "";
+
+	UPROPERTY(BlueprintReadOnly)
 	FString WebSocketConnectionStat = "Waiting";
+
+	UFUNCTION(BlueprintCallable)
+	FMatrixMsgStruct PopNextMessageFromQueue();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsQueueEmpty();
+
 	FString MatrixComUID;
 	FString GetWebSocketAddr();
 	void InitWebSocket();
 	void TryReconnect();
 	void ShutdownWebSocket();
+	TCircularQueue<FMatrixMsgStruct> MsgQueue = TCircularQueue<FMatrixMsgStruct>(10000);
 	FMatrixMsgStruct ParsedFMatrixMsgStruct(FString TcpLatestRecvString);
 	void ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg);
 	void WsSendJson(TSharedPtr<FJsonObject> ReplyJson);
+
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void BeginDestroy() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

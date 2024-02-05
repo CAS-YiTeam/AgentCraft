@@ -1,32 +1,30 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "MatrixCommunication.h"
 #include "Misc/CommandLine.h"
 #include "IWebSocket.h"
 #include "WebSocketsModule.h"
-
 
 // Sets default values
 AMatrixCommunication::AMatrixCommunication()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void AMatrixCommunication::BeginPlay()
 {
     Super::BeginPlay();
+    MsgQueue.Empty();
     InitWebSocket();
 }
-
 
 void AMatrixCommunication::BeginDestroy()
 {
     WebSocketConnectionStat = "Terminated";
-    if (WebSocket.IsValid() && WebSocket->IsConnected()) {
+    if (WebSocket.IsValid() && WebSocket->IsConnected())
+    {
         WebSocket->Close();
     }
     WebSocket.Reset();
@@ -37,7 +35,6 @@ void AMatrixCommunication::BeginDestroy()
 void AMatrixCommunication::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
 }
 
 FString AMatrixCommunication::ParseCommandLineArguments()
@@ -52,10 +49,10 @@ FString AMatrixCommunication::ParseCommandLineArguments()
 
     for (FString Arg : Args)
     {
-        // ¼ì²éµ±Ç°²ÎÊıÊÇ·ñÊÇÎÒÃÇ¸ĞĞËÈ¤µÄ²ÎÊı
+        // æ£€æŸ¥å½“å‰å‚æ•°æ˜¯å¦æ˜¯æˆ‘ä»¬æ„Ÿå…´è¶£çš„å‚æ•°
         if (Arg.StartsWith(ParamName))
         {
-            // »ñÈ¡²ÎÊıÖµ£¬ÕâÀï²»ÔÙÊ¹ÓÃÄ§·¨Êı×Ö£¬¶øÊÇÊ¹ÓÃÖ®Ç°¶¨ÒåµÄ³£Á¿
+            // è·å–å‚æ•°å€¼ï¼Œè¿™é‡Œä¸å†ä½¿ç”¨é­”æ³•æ•°å­—ï¼Œè€Œæ˜¯ä½¿ç”¨ä¹‹å‰å®šä¹‰çš„å¸¸é‡
             ParameterValue = Arg.Mid(ParamNameLength);
             UE_LOG(LogTemp, Log, TEXT("WsAddr value: %s"), *ParameterValue);
             WebSocketCurrentUrl = ParameterValue;
@@ -74,6 +71,11 @@ FString AMatrixCommunication::GetWebSocketAddr()
     return WsUrl;
 }
 
+/**
+ * Initializes the WebSocket connection.
+ * This function creates a WebSocket connection instance, adds event listeners for connection status and message reception,
+ * and starts the connection.
+ */
 void AMatrixCommunication::InitWebSocket()
 {
     FString WsUrl = GetWebSocketAddr();
@@ -83,19 +85,19 @@ void AMatrixCommunication::InitWebSocket()
         FModuleManager::Get().LoadModule("WebSockets");
     }
 
-    // ´´½¨WebSocketÁ¬½ÓÊµÀı
+    // åˆ›å»ºWebSocketè¿æ¥å®ä¾‹
     WebSocket = FWebSocketsModule::Get().CreateWebSocket(WsUrl);
 
-    // Ìí¼ÓÊÂ¼ş¼àÌı
+    // æ·»åŠ äº‹ä»¶ç›‘å¬
     WebSocket->OnConnected().AddLambda([this]() {
-        // Á¬½Ó³É¹¦Ê±Ëù×öµÄ´¦Àí
+        // è¿æ¥æˆåŠŸæ—¶æ‰€åšçš„å¤„ç†
         UE_LOG(LogTemp, Log, TEXT("Connection Success"));
         WebSocketConnectionStat = "Connection OK";
 
-        // ·¢ËÍ³õÊ¼Á¬½ÓĞÅÏ¢
+        // å‘é€åˆå§‹è¿æ¥ä¿¡æ¯
         FMatrixMsgStruct Msg = FMatrixMsgStruct();
 
-        // Éú³ÉUID
+        // ç”ŸæˆUID
         FGuid MyUniqueID = FGuid::NewGuid();
         FString MatrixComUID = MyUniqueID.ToString();
         Msg.src = MatrixComUID;
@@ -108,9 +110,9 @@ void AMatrixCommunication::InitWebSocket()
 
     WebSocket->OnConnectionError().AddLambda([this](const FString& Error) {
         UE_LOG(LogTemp, Warning, TEXT("Connection Error: %s"), *Error);
-        if (WebSocket) 
+        if (WebSocket)
         {
-            // Á¬½Ó³ö´íÊ±Ëù×öµÄ´¦Àí
+            // è¿æ¥å‡ºé”™æ—¶æ‰€åšçš„å¤„ç†
             TryReconnect();
         }
 
@@ -120,7 +122,7 @@ void AMatrixCommunication::InitWebSocket()
         UE_LOG(LogTemp, Log, TEXT("Connection Close"));
         if (WebSocket)
         {
-            // Á¬½Ó¹Ø±ÕÊ±Ëù×öµÄ´¦Àí
+            // è¿æ¥å…³é—­æ—¶æ‰€åšçš„å¤„ç†
             TryReconnect();
         }
     });
@@ -129,29 +131,31 @@ void AMatrixCommunication::InitWebSocket()
         UE_LOG(LogTemp, Log, TEXT("Receive Message: %s"), *Message);
         if (WebSocket)
         {
-            // ½ÓÊÕµ½ÏûÏ¢Ê±µÄ´¦Àí
+            // æ¥æ”¶åˆ°æ¶ˆæ¯æ—¶çš„å¤„ç†
             WebSocketConnectionStat = "Connection OK";
             if (GEngine)
             {
                 // Format the FString using Printf
                 FString FormattedMessage = FString::Printf(TEXT("Receive Message: %s"), *Message);
                 FMatrixMsgStruct Msg = ParsedFMatrixMsgStruct(Message);
+                MsgQueue.Enqueue(Msg); // add to head
                 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FormattedMessage);
             }
         }
     });
 
-    // ¿ªÊ¼Á¬½Ó
+    // å¼€å§‹è¿æ¥
     WebSocket->Connect();
 }
 
-// ¶¨Òå³¢ÊÔÖØĞÂÁ¬½ÓµÄº¯Êı
+// å®šä¹‰å°è¯•é‡æ–°è¿æ¥çš„å‡½æ•°
 void AMatrixCommunication::TryReconnect()
 {
-    if (WebSocket && !WebSocketConnectionStat.IsEmpty() && WebSocketConnectionStat != "Terminated") {
+    if (WebSocket && !WebSocketConnectionStat.IsEmpty() && WebSocketConnectionStat != "Terminated")
+    {
         WebSocketConnectionStat = "Reconnecting ...";
         FTimerHandle ReconnectTimerHandle;
-        // Èç¹ûWebSocketÈÔÈ»´æÔÚ£¬Ëü¿ÉÄÜ´¦ÓÚ¹Ø±Õ×´Ì¬
+        // å¦‚æœWebSocketä»ç„¶å­˜åœ¨ï¼Œå®ƒå¯èƒ½å¤„äºå…³é—­çŠ¶æ€
         if (WebSocket.IsValid() && !WebSocket->IsConnected())
         {
             UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
@@ -160,7 +164,26 @@ void AMatrixCommunication::TryReconnect()
     }
 }
 
+// å®šä¹‰å°è¯•é‡æ–°è¿æ¥çš„å‡½æ•°
+FMatrixMsgStruct AMatrixCommunication::PopNextMessageFromQueue()
+{
+    FMatrixMsgStruct Msg;
 
+    if (MsgQueue.IsEmpty())
+    {
+        Msg.valid = false;
+        return Msg;
+    }
+
+    Msg.valid = true;
+    MsgQueue.Dequeue(Msg);
+    return Msg;
+}
+
+bool AMatrixCommunication::IsQueueEmpty()
+{
+    return MsgQueue.IsEmpty();
+}
 
 FMatrixMsgStruct AMatrixCommunication::ParsedFMatrixMsgStruct(FString TcpLatestRecvString)
 {
@@ -171,9 +194,7 @@ FMatrixMsgStruct AMatrixCommunication::ParsedFMatrixMsgStruct(FString TcpLatestR
     FJsonSerializer::Deserialize(JsonReader, JsonObject);
     FJsonObjectConverter::JsonObjectToUStruct<FMatrixMsgStruct>(JsonObject.ToSharedRef(), &MatrixMsg, 0, 0);
     return MatrixMsg;
-
 }
-
 
 void AMatrixCommunication::ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg)
 {
@@ -182,10 +203,9 @@ void AMatrixCommunication::ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg)
     WsSendJson(MatrixMsgJson);
 }
 
-
 void AMatrixCommunication::WsSendJson(TSharedPtr<FJsonObject> ReplyJson)
 {
-    // ×ª³É×Ö·û´®
+    // è½¬æˆå­—ç¬¦ä¸²
     FString ReplyString;
     auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&ReplyString);
     FJsonSerializer::Serialize(ReplyJson.ToSharedRef(), Writer);
