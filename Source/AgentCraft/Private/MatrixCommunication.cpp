@@ -25,10 +25,12 @@ void AMatrixCommunication::BeginPlay()
 
 void AMatrixCommunication::BeginDestroy()
 {
-    Super::BeginDestroy();
-    if (WebSocket && WebSocket->IsConnected()) {
+    WebSocketConnectionStat = "Terminated";
+    if (WebSocket.IsValid() && WebSocket->IsConnected()) {
         WebSocket->Close();
     }
+    WebSocket.Reset();
+    Super::BeginDestroy();
 }
 
 // Called every frame
@@ -38,7 +40,7 @@ void AMatrixCommunication::Tick(float DeltaTime)
 
 }
 
-FString ParseCommandLineArguments()
+FString AMatrixCommunication::ParseCommandLineArguments()
 {
     const FString ParamName = TEXT("-WsAddr=");
     const int32 ParamNameLength = ParamName.Len();
@@ -56,11 +58,13 @@ FString ParseCommandLineArguments()
             // 获取参数值，这里不再使用魔法数字，而是使用之前定义的常量
             ParameterValue = Arg.Mid(ParamNameLength);
             UE_LOG(LogTemp, Log, TEXT("WsAddr value: %s"), *ParameterValue);
+            WebSocketCurrentUrl = ParameterValue;
             return ParameterValue;
         }
     }
 
-    return "ws://127.0.0.1:10101/ws_agentcraft_interface";
+    WebSocketCurrentUrl = "ws://127.0.0.1:10101/ws_agentcraft_interface";
+    return WebSocketCurrentUrl;
 }
 
 // Called when the game starts or when spawned
@@ -86,7 +90,8 @@ void AMatrixCommunication::InitWebSocket()
     WebSocket->OnConnected().AddLambda([this]() {
         // 连接成功时所做的处理
         UE_LOG(LogTemp, Log, TEXT("Connection Success"));
-        
+        WebSocketConnectionStat = "Connection OK";
+
         // 发送初始连接信息
         FMatrixMsgStruct Msg = FMatrixMsgStruct();
 
@@ -96,34 +101,65 @@ void AMatrixCommunication::InitWebSocket()
         Msg.src = MatrixComUID;
         Msg.dst = "matrix";
         Msg.command = "connect_to_matrix";
+        Msg.need_reply = true;
         ConvertToJsonAndSendWs(Msg);
 
     });
 
-    WebSocket->OnConnectionError().AddLambda([](const FString& Error) {
-        // 连接出错时所做的处理
+    WebSocket->OnConnectionError().AddLambda([this](const FString& Error) {
         UE_LOG(LogTemp, Warning, TEXT("Connection Error: %s"), *Error);
-    });
-
-    WebSocket->OnClosed().AddLambda([](int32 StatusCode, const FString& Reason, bool bWasClean) {
-        // 连接关闭时所做的处理
-        UE_LOG(LogTemp, Log, TEXT("Connection Close"));
-    });
-
-    WebSocket->OnMessage().AddLambda([](const FString& Message) {
-        // 接收到消息时的处理
-        UE_LOG(LogTemp, Log, TEXT("Receive Message: %s"), *Message);
-        if (GEngine)
+        if (WebSocket) 
         {
-            // Format the FString using Printf
-            FString FormattedMessage = FString::Printf(TEXT("Receive Message: %s"), *Message);
-            GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FormattedMessage);
+            // 连接出错时所做的处理
+            TryReconnect();
+        }
+
+    });
+
+    WebSocket->OnClosed().AddLambda([this](int32 StatusCode, const FString& Reason, bool bWasClean) {
+        UE_LOG(LogTemp, Log, TEXT("Connection Close"));
+        if (WebSocket)
+        {
+            // 连接关闭时所做的处理
+            TryReconnect();
+        }
+    });
+
+    WebSocket->OnMessage().AddLambda([this](const FString& Message) {
+        UE_LOG(LogTemp, Log, TEXT("Receive Message: %s"), *Message);
+        if (WebSocket)
+        {
+            // 接收到消息时的处理
+            WebSocketConnectionStat = "Connection OK";
+            if (GEngine)
+            {
+                // Format the FString using Printf
+                FString FormattedMessage = FString::Printf(TEXT("Receive Message: %s"), *Message);
+                FMatrixMsgStruct Msg = ParsedFMatrixMsgStruct(Message);
+                GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FormattedMessage);
+            }
         }
     });
 
     // 开始连接
     WebSocket->Connect();
 }
+
+// 定义尝试重新连接的函数
+void AMatrixCommunication::TryReconnect()
+{
+    if (WebSocket && !WebSocketConnectionStat.IsEmpty() && WebSocketConnectionStat != "Terminated") {
+        WebSocketConnectionStat = "Reconnecting ...";
+        FTimerHandle ReconnectTimerHandle;
+        // 如果WebSocket仍然存在，它可能处于关闭状态
+        if (WebSocket.IsValid() && !WebSocket->IsConnected())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
+            WebSocket->Connect();
+        }
+    }
+}
+
 
 
 FMatrixMsgStruct AMatrixCommunication::ParsedFMatrixMsgStruct(FString TcpLatestRecvString)

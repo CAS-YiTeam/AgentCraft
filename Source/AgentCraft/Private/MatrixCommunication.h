@@ -70,14 +70,15 @@ public:
 	// Sets default values for this actor's properties
 	AMatrixCommunication();
 	TSharedPtr<IWebSocket> WebSocket;
-	FString GetWebSocketAddr();
+	FString WebSocketCurrentUrl = "";
+	FString WebSocketConnectionStat = "Waiting";
 	FString MatrixComUID;
+	FString GetWebSocketAddr();
 	void InitWebSocket();
+	void TryReconnect();
 	void ShutdownWebSocket();
 	FMatrixMsgStruct ParsedFMatrixMsgStruct(FString TcpLatestRecvString);
-
 	void ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg);
-
 	void WsSendJson(TSharedPtr<FJsonObject> ReplyJson);
 
 protected:
@@ -88,5 +89,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	FString ParseCommandLineArguments();
 
 };
