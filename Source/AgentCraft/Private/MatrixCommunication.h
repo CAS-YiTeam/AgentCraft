@@ -29,20 +29,28 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	FString WebSocketConnectionStat = "Waiting";
 
+    UPROPERTY(BlueprintReadWrite)
+    FString ClientID = "";
+
+    UPROPERTY(BlueprintReadOnly)
+    FString MatrixComUID;
+
 	UFUNCTION(BlueprintCallable)
 	FMatrixMsgStruct PopNextMessageFromQueue();
 
 	UFUNCTION(BlueprintCallable)
 	bool IsQueueEmpty();
 
-	FString MatrixComUID;
 	FString GetWebSocketAddr();
 	void InitWebSocket();
 	void TryReconnect();
-	void ShutdownWebSocket();
-	TCircularQueue<FMatrixMsgStruct> MsgQueue = TCircularQueue<FMatrixMsgStruct>(10000);
+
+    TCircularQueue<FMatrixMsgStruct> MsgQueue = TCircularQueue<FMatrixMsgStruct>(10000);
 	FMatrixMsgStruct ParsedFMatrixMsgStruct(FString TcpLatestRecvString);
-	void ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg);
+
+    UFUNCTION(BlueprintCallable)
+    void ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg);
+
 	void WsSendJson(TSharedPtr<FJsonObject> ReplyJson);
 
 

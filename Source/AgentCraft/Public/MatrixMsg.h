@@ -10,7 +10,7 @@ struct FMatrixMsgStruct
 
 	GENERATED_BODY()
 
-	// 必须使用小写字母 + 下划线！
+	// 蹇呴』浣跨敤灏忓啓瀛楁瘝 + 涓嬪垝绾匡紒
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString src;
 

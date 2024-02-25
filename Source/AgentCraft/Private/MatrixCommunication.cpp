@@ -99,7 +99,7 @@ void AMatrixCommunication::InitWebSocket()
 
         // 生成UID
         FGuid MyUniqueID = FGuid::NewGuid();
-        FString MatrixComUID = MyUniqueID.ToString();
+        MatrixComUID = MyUniqueID.ToString();
         Msg.src = MatrixComUID;
         Msg.dst = "matrix";
         Msg.command = "connect_to_matrix";
@@ -151,15 +151,24 @@ void AMatrixCommunication::InitWebSocket()
 // 定义尝试重新连接的函数
 void AMatrixCommunication::TryReconnect()
 {
-    if (WebSocket && !WebSocketConnectionStat.IsEmpty() && WebSocketConnectionStat != "Terminated")
-    {
-        WebSocketConnectionStat = "Reconnecting ...";
-        FTimerHandle ReconnectTimerHandle;
-        // 如果WebSocket仍然存在，它可能处于关闭状态
-        if (WebSocket.IsValid() && !WebSocket->IsConnected())
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
-            WebSocket->Connect();
+    if (WebSocket)
+    { 
+        if (!WebSocketConnectionStat.IsEmpty())
+        { 
+            if (WebSocketConnectionStat != "Terminated")
+            {
+                WebSocketConnectionStat = "Reconnecting ...";
+                FTimerHandle ReconnectTimerHandle;
+                // 如果WebSocket仍然存在，它可能处于关闭状态
+                if (WebSocket.IsValid())
+                {
+                    if(!WebSocket->IsConnected())
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
+                        WebSocket->Connect();
+                    }
+                }
+            }
         }
     }
 }
