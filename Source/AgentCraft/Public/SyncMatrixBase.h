@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MatrixCommunication.h"
+#include "BasicAgentCpp.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "SyncMatrixBase.generated.h"
@@ -17,13 +18,17 @@ public:
 	// Sets default values for this actor's properties
 	ASyncMatrixBase();
 	AMatrixCommunication* MatrixCom = nullptr;
+	TMap<FString, ABasicAgentCpp> AgentMap;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
+    void ProcessMatComMessage(FMatrixMsgStruct MatrixMsg);
+    // Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+    uint32 tick_cnt = 0;
 };

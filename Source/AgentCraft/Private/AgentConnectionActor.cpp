@@ -1,44 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BasicAgentCpp.h"
+#include "AgentConnectionActor.h"
 
 // Sets default values
-ABasicAgentCpp::ABasicAgentCpp()
+AAgentConnectionActor::AAgentConnectionActor()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    // "/Game/" is the content folder
+    // "/Game" is the content folder
     ConstructorHelpers::FClassFinder<AActor> BPFinder(TEXT("/Game/Dynamic/Agent/Agent_Level_1/CubeAgent/FloatingCube"));
     BPToSpawn = BPFinder.Class;
-
 }
 
 // Called when the game starts or when spawned
-void ABasicAgentCpp::BeginPlay()
+void AAgentConnectionActor::BeginPlay()
 {
 	Super::BeginPlay();
+	
 }
 
 // Called every frame
-void ABasicAgentCpp::Tick(float DeltaTime)
+void AAgentConnectionActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
     CubeDanceDemo(DeltaTime);
     AgentAliveTime += DeltaTime;
-}
-
-// Called to bind functionality to input
-void ABasicAgentCpp::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 
 
-
-void ABasicAgentCpp::CubeDanceDemo(float DeltaTime)
+void AAgentConnectionActor::CubeDanceDemo(float DeltaTime)
 {
     int M = 16;
     if (AgentAliveTime <= 0)
@@ -62,18 +55,22 @@ void ABasicAgentCpp::CubeDanceDemo(float DeltaTime)
             NewActor->SetActorTransform(tf);
             // make actors child actor of `this`
             NewActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-            //NewActor->SetHidden(false);
+            NewActor->SetHidden(true);
+
 
             FTimerHandle MemberTimerHandle2;
             GetWorld()->GetTimerManager().SetTimer(MemberTimerHandle2,
-            FTimerDelegate::CreateLambda([M, i, NewActor, MemberTimerHandle2, this] {
+                FTimerDelegate::CreateLambda([M, i, NewActor, MemberTimerHandle2, this] {
                 // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "Timer");
-                FVector ParentLocaion = GetActorLocation();
-                float RoSpeed_H = 180;
-                ParentLocaion.X += 100 * cos((float)(i * (360 / M) + AgentAliveTime * RoSpeed_H) / 180 * PI);
-                ParentLocaion.Y += 100 * sin((float)(i * (360 / M) + AgentAliveTime * RoSpeed_H) / 180 * PI);
-                ParentLocaion.Z += 10 * sin((float)(i * (4*360 / M) + AgentAliveTime * 6* RoSpeed_H) / 180 * PI);
-                NewActor->SetActorLocation(ParentLocaion);
+                if (IsValid(ConnectFromAgent) && IsValid(ConnectToAgent))
+                {
+                    FVector ParentLocaion = GetActorLocation();
+                    float RoSpeed_H = 180;
+                    ParentLocaion.X += 100 * cos((float)(i * (360 / M) + AgentAliveTime * RoSpeed_H) / 180 * PI);
+                    ParentLocaion.Y += 100 * sin((float)(i * (360 / M) + AgentAliveTime * RoSpeed_H) / 180 * PI);
+                    ParentLocaion.Z += 10 * sin((float)(i * (4 * 360 / M) + AgentAliveTime * 6 * RoSpeed_H) / 180 * PI);
+                    NewActor->SetActorLocation(ParentLocaion);
+                }
             }), DeltaTime, true);
         }
     }

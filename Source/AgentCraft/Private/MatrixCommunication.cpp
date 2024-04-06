@@ -23,6 +23,12 @@ void AMatrixCommunication::BeginPlay()
 void AMatrixCommunication::BeginDestroy()
 {
     WebSocketConnectionStat = "Terminated";
+    if (WebSocket.IsValid())
+    {
+        WebSocket->OnConnectionError().Clear();
+        WebSocket->OnClosed().Clear();
+    }
+
     if (WebSocket.IsValid() && WebSocket->IsConnected())
     {
         WebSocket->Close();
@@ -110,7 +116,7 @@ void AMatrixCommunication::InitWebSocket()
 
     WebSocket->OnConnectionError().AddLambda([this](const FString& Error) {
         UE_LOG(LogTemp, Warning, TEXT("Connection Error: %s"), *Error);
-        if (WebSocket)
+        if (IsValid(this) && WebSocket)
         {
             // 连接出错时所做的处理
             TryReconnect();
@@ -120,7 +126,7 @@ void AMatrixCommunication::InitWebSocket()
 
     WebSocket->OnClosed().AddLambda([this](int32 StatusCode, const FString& Reason, bool bWasClean) {
         UE_LOG(LogTemp, Log, TEXT("Connection Close"));
-        if (WebSocket)
+        if (IsValid(this) && WebSocket)
         {
             // 连接关闭时所做的处理
             TryReconnect();
@@ -128,7 +134,7 @@ void AMatrixCommunication::InitWebSocket()
     });
 
     WebSocket->OnMessage().AddLambda([this](const FString& Message) {
-        UE_LOG(LogTemp, Log, TEXT("Receive Message: %s"), *Message);
+        // UE_LOG(LogTemp, Log, TEXT("Receive Message: %s"), *Message);
         if (WebSocket)
         {
             // 接收到消息时的处理
@@ -136,10 +142,10 @@ void AMatrixCommunication::InitWebSocket()
             if (GEngine)
             {
                 // Format the FString using Printf
-                FString FormattedMessage = FString::Printf(TEXT("Receive Message: %s"), *Message);
+                // FString FormattedMessage = FString::Printf(TEXT("Receive Message: %s"), *Message);
                 FMatrixMsgStruct Msg = ParsedFMatrixMsgStruct(Message);
                 MsgQueue.Enqueue(Msg); // add to head
-                GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FormattedMessage);
+                // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FormattedMessage);
             }
         }
     });
@@ -151,22 +157,19 @@ void AMatrixCommunication::InitWebSocket()
 // 定义尝试重新连接的函数
 void AMatrixCommunication::TryReconnect()
 {
-    if (WebSocket)
-    { 
-        if (!WebSocketConnectionStat.IsEmpty())
-        { 
-            if (WebSocketConnectionStat != "Terminated")
+    if (IsValid(this) && WebSocket.IsValid())
+    {
+        if (!WebSocketConnectionStat.IsEmpty() && WebSocketConnectionStat != "Terminated")
+        {
+            WebSocketConnectionStat = "Reconnecting ...";
+            FTimerHandle ReconnectTimerHandle;
+            // 如果WebSocket仍然存在，它可能处于关闭状态
+            if (WebSocket.IsValid())
             {
-                WebSocketConnectionStat = "Reconnecting ...";
-                FTimerHandle ReconnectTimerHandle;
-                // 如果WebSocket仍然存在，它可能处于关闭状态
-                if (WebSocket.IsValid())
+                if(!WebSocket->IsConnected())
                 {
-                    if(!WebSocket->IsConnected())
-                    {
-                        UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
-                        WebSocket->Connect();
-                    }
+                    UE_LOG(LogTemp, Warning, TEXT("Attempting to reconnect..."));
+                    WebSocket->Connect();
                 }
             }
         }
@@ -184,8 +187,8 @@ FMatrixMsgStruct AMatrixCommunication::PopNextMessageFromQueue()
         return Msg;
     }
 
-    Msg.valid = true;
     MsgQueue.Dequeue(Msg);
+    Msg.valid = true;
     return Msg;
 }
 
@@ -207,9 +210,12 @@ FMatrixMsgStruct AMatrixCommunication::ParsedFMatrixMsgStruct(FString TcpLatestR
 
 void AMatrixCommunication::ConvertToJsonAndSendWs(FMatrixMsgStruct MatrixMsg)
 {
-    TSharedRef<FJsonObject> MatrixMsgJson = MakeShareable(new FJsonObject);
-    FJsonObjectConverter::UStructToJsonObject(FMatrixMsgStruct::StaticStruct(), &MatrixMsg, MatrixMsgJson, 0, 0);
-    WsSendJson(MatrixMsgJson);
+    if (IsValid(this) && WebSocket.IsValid() && WebSocket->IsConnected())
+    {
+        TSharedRef<FJsonObject> MatrixMsgJson = MakeShareable(new FJsonObject);
+        FJsonObjectConverter::UStructToJsonObject(FMatrixMsgStruct::StaticStruct(), &MatrixMsg, MatrixMsgJson, 0, 0);
+        WsSendJson(MatrixMsgJson);
+    }
 }
 
 void AMatrixCommunication::WsSendJson(TSharedPtr<FJsonObject> ReplyJson)

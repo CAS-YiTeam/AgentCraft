@@ -15,6 +15,7 @@ ASyncMatrixBase::ASyncMatrixBase()
 void ASyncMatrixBase::BeginPlay()
 {
 	Super::BeginPlay();
+    UE_LOG(LogTemp, Log, TEXT("SyncMatrix Begin Play"));
     // Find actor of class AMatrixCom (frist encounter)
     MatrixCom = Cast<AMatrixCommunication>(
         UGameplayStatics::GetActorOfClass(this, AMatrixCommunication::StaticClass())
@@ -22,15 +23,11 @@ void ASyncMatrixBase::BeginPlay()
 
 }
 
-
-
-
-
-
-
 void RequestNextAgentUpdate(AMatrixCommunication* MatrixCom)
 {
     // send a message to the MatrixCom actor to request the next agent update
+    // UE_LOG(LogTemp, Log, TEXT("RequestNextAgentUpdate"));
+    // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "RequestNextAgentUpdate");
     if (MatrixCom)
     {
         FMatrixMsgStruct Msg = FMatrixMsgStruct();
@@ -40,7 +37,9 @@ void RequestNextAgentUpdate(AMatrixCommunication* MatrixCom)
         Msg.dst = "matrix";
         Msg.command = "update_agents";
         Msg.need_reply = true;
+        // UE_LOG(LogTemp, Log, TEXT("MatrixCom->ConvertToJsonAndSendWs(Msg)"));
         MatrixCom->ConvertToJsonAndSendWs(Msg);
+        // UE_LOG(LogTemp, Log, TEXT("MatrixCom->ConvertToJsonAndSendWs(Msg) :: Done"));
     }
 }
 
@@ -58,29 +57,53 @@ enum class Option {
 };
 
 
-void ProcessMatComMessage(FMatrixMsgStruct MatrixMsg)
+void ASyncMatrixBase::ProcessMatComMessage(FMatrixMsgStruct MatrixMsg)
 {
 
     // do something with the message
     FString cmd = MatrixMsg.command;
-    if (cmd == "update_script")
+    FString arg = MatrixMsg.arg;
+    if (cmd == "update_agents.re")
     {
+        // parse json dat
+        FAgentSummaryArrayStruct AgentSummaryArray;
+        TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(arg);
+        TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+        FJsonSerializer::Deserialize(JsonReader, JsonObject);
+        FJsonObjectConverter::JsonObjectToUStruct<FAgentSummaryArrayStruct>(JsonObject.ToSharedRef(), &AgentSummaryArray, 0, 0);
+        // check dat
+        for (auto agent_summary : AgentSummaryArray.agent_summary_array)
+        {
+            // FVector agent_summary.agent_location to FString
+            FString agent_location_str = FString::Printf(TEXT("%f, %f, %f"),
+                agent_summary.agent_location.X, agent_summary.agent_location.Y, agent_summary.agent_location.Z);
 
+            FString printbuf = FString::Printf(TEXT("agent_id: %s, agent_location: %s"), *agent_summary.agent_id, *agent_location_str);
+            GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, printbuf);
+            // fix
+            if (AgentMap.Contains(agent_summary.agent_id))
+            {
+                // update agent location
+                AgentMap[agent_summary.agent_id].SetActorLocation(agent_summary.agent_location);
+            }
+            else
+            {
+                FVector SpawnLocation = agent_summary.agent_location;
+                FRotator SpawnRotation = FRotator::ZeroRotator;
+                GetWorld()->SpawnActor<ABasicAgentCpp>(SpawnLocation, SpawnRotation);
+
+                // AgentMap.Add(agent_summary.agent_id, ABasicAgentCpp::SpawnAgent(agent_summary.agent_location));
+            }
+        }
     }
 
 }
-
-
-
-
-
-
-
 
 // Called every frame
 void ASyncMatrixBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+    tick_cnt += 1;
 
 	// check if the MatrixCom actor is valid, if not, return
 	if (!MatrixCom)
@@ -102,4 +125,11 @@ void ASyncMatrixBase::Tick(float DeltaTime)
 			ProcessMatComMessage(MatrixMsg);
 		}
 	}
+
+    // every two ticks, request the next agent update
+    if (tick_cnt % 40 == 0)
+    {
+        RequestNextAgentUpdate(MatrixCom);
+    }
+
 }

@@ -57,3 +57,32 @@ struct FMatrixMsgStruct
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	bool valid = false;
 };
+
+
+USTRUCT(BlueprintType)
+struct FAgentSummaryStruct
+{
+
+	GENERATED_BODY()
+
+	// 必须使用小写字母 + 下划线！
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FString agent_id;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FVector agent_location;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool valid = false;
+};
+
+
+USTRUCT(BlueprintType)
+struct FAgentSummaryArrayStruct
+{
+	GENERATED_BODY()
+
+	// 必须使用小写字母 + 下划线！
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<FAgentSummaryStruct> agent_summary_array;
+};

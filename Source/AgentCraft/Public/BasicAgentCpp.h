@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "BasicAgentCpp.generated.h"
 
+
 UCLASS()
 class AGENTCRAFT_API ABasicAgentCpp : public ACharacter
 {
@@ -21,11 +22,21 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    // Create Event
+    UFUNCTION(BlueprintImplementableEvent, Category = "AgentCraft")
+    void OnAgentBeginWorking();
+
+    // How long this agent become active
+    float AgentAliveTime = 0;
+
+    // A small demo
+    void CubeDanceDemo(float DeltaTime);
+    TSubclassOf<AActor> BPToSpawn;
 };
 
 
