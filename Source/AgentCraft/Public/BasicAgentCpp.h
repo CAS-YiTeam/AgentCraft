@@ -41,21 +41,21 @@ public:
     // 然后，在你的.cpp文件中，你需要添加此函数的实现。
     // 注意这里函数名需要在后面加上_Implementation，这是UE4的约定
     // Create Event
-    UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "AgentCraft")
         void OnAgentUpdateStatus(const FString& BpAgentStatus);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentStatus = "";
 
 
     // Create Event
-    UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "AgentCraft")
         void OnAgentUpdateAnimation(const FString& BpAgentAnimation);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentAnimation = "";
 
 
     // Create Event
-    UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "AgentCraft")
         void OnAgentUpdateActivity(const FString& BpAgentActivity);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentActivity = "";

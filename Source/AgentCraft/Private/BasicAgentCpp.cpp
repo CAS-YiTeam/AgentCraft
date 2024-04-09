@@ -33,6 +33,7 @@ void ABasicAgentCpp::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
     // OnAgentUpdateStatus();
     AgentAliveTime += DeltaTime;
+
 }
 
 // Called to bind functionality to input
