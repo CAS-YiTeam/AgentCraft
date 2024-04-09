@@ -19,13 +19,16 @@ public:
 	ASyncMatrixBase();
 	AMatrixCommunication* MatrixCom = nullptr;
 	TMap<FString, ABasicAgentCpp> AgentMap;
+    TArray<FAgentSummaryStruct> AgentSummaryList;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-    void ProcessMatComMessage(FMatrixMsgStruct MatrixMsg);
+	void UpdateAgent(ABasicAgentCpp* agent, FAgentSummaryStruct agent_summary);
+    ABasicAgentCpp* CreateAgent(FAgentSummaryStruct agent_summary);
+	void ProcessMatComMessage(FMatrixMsgStruct MatrixMsg);
     // Called every frame
 	virtual void Tick(float DeltaTime) override;
 

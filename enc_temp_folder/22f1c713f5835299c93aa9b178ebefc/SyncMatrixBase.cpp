@@ -144,19 +144,19 @@ void ASyncMatrixBase::UpdateAgent(ABasicAgentCpp* agent, FAgentSummaryStruct age
     if (agent->AgentActivity != agent_summary.agent_activity)
     {
         agent->AgentActivity = agent_summary.agent_activity;
-        agent->OnAgentUpdateActivity(agent_summary.agent_activity);
+        agent->OnAgentUpdateActivity();
     }
 
     if (agent->AgentAnimation != agent_summary.agent_animation)
     {
         agent->AgentAnimation = agent_summary.agent_animation;
-        agent->OnAgentUpdateAnimation(agent_summary.agent_animation);
+        agent->OnAgentUpdateAnimation();
     }
 
     if (agent->AgentStatus != agent_summary.agent_status)
     {
         agent->AgentStatus = agent_summary.agent_status;
-        agent->OnAgentUpdateStatus(agent_summary.agent_status);
+        agent->OnAgentUpdateStatus();
     }
 }
 

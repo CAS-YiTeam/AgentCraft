@@ -16,11 +16,14 @@ public:
 	// Sets default values for this actor's properties
 	AAgentConnectionActor();
 
-    UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
         ABasicAgentCpp* ConnectFromAgent;
 
-    UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
         ABasicAgentCpp* ConnectToAgent;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "VALUE")
+        float RunningSpeed=0.5;
 
 protected:
 	// Called when the game starts or when spawned

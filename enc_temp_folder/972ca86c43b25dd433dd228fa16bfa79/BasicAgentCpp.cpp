@@ -31,7 +31,7 @@ void ABasicAgentCpp::BeginPlay()
 void ABasicAgentCpp::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-    // OnAgentUpdateStatus();
+    OnAgentUpdateStatus();
     AgentAliveTime += DeltaTime;
 }
 
@@ -42,18 +42,18 @@ void ABasicAgentCpp::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateStatus_Implementation(FString& BpAgentStatus)
+void ABasicAgentCpp::OnAgentUpdateStatus_Implementation()
 {
     // CubeDanceDemo(0.01);
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateAnimation_Implementation(FString& BpAgentAnimation)
+void ABasicAgentCpp::OnAgentUpdateAnimation_Implementation()
 {
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateActivity_Implementation(FString& BpAgentActivity)
+void ABasicAgentCpp::OnAgentUpdateActivity_Implementation()
 {
 
 }

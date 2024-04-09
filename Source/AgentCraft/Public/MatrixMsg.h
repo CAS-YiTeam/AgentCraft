@@ -62,7 +62,6 @@ struct FMatrixMsgStruct
 USTRUCT(BlueprintType)
 struct FAgentSummaryStruct
 {
-
 	GENERATED_BODY()
 
 	// 必须使用小写字母 + 下划线！
@@ -71,6 +70,18 @@ struct FAgentSummaryStruct
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FVector agent_location;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    FString agent_status;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    FString agent_animation;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    FString agent_activity;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    FString agent_request;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	bool valid = false;
