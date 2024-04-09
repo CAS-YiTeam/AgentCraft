@@ -42,18 +42,18 @@ void ABasicAgentCpp::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateStatus_Implementation(FString& BpAgentStatus)
+void ABasicAgentCpp::OnAgentUpdateStatus_Implementation(const FString& BpAgentStatus)
 {
     // CubeDanceDemo(0.01);
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateAnimation_Implementation(FString& BpAgentAnimation)
+void ABasicAgentCpp::OnAgentUpdateAnimation_Implementation(const FString& BpAgentAnimation)
 {
 
 }
 
-void ABasicAgentCpp::OnAgentUpdateActivity_Implementation(FString& BpAgentActivity)
+void ABasicAgentCpp::OnAgentUpdateActivity_Implementation(const FString& BpAgentActivity)
 {
 
 }

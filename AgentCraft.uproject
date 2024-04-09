@@ -24,6 +24,10 @@
 		{
 			"Name": "WebBrowserWidget",
 			"Enabled": true
+		},
+		{
+			"Name": "VRM4U",
+			"Enabled": false
 		}
 	]
 }

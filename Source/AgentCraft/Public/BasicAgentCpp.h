@@ -42,21 +42,21 @@ public:
     // 注意这里函数名需要在后面加上_Implementation，这是UE4的约定
     // Create Event
     UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
-        void OnAgentUpdateStatus(FString& BpAgentStatus);
+        void OnAgentUpdateStatus(const FString& BpAgentStatus);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentStatus = "";
 
 
     // Create Event
     UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
-        void OnAgentUpdateAnimation(FString& BpAgentAnimation);
+        void OnAgentUpdateAnimation(const FString& BpAgentAnimation);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentAnimation = "";
 
 
     // Create Event
     UFUNCTION(BlueprintNativeEvent, Category = "AgentCraft")
-        void OnAgentUpdateActivity(FString& BpAgentActivity);
+        void OnAgentUpdateActivity(const FString& BpAgentActivity);
     UPROPERTY(BlueprintReadWrite, Category = "AgentCraft")
         FString AgentActivity = "";
 
